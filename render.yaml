@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: aethris-auth
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    disk:
+      name: aethris-db
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DB_PATH
+        value: /data/aethris.db
+      - key: ADMIN_SECRET
+        sync: false
+
+  - type: worker
+    name: aethris-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    plan: free
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: BUYER_ROLE_ID
+        sync: false
+      - key: ADMIN_ROLE_ID
+        sync: false
+      - key: BACKEND_URL
+        sync: false
+      - key: ADMIN_SECRET
+        sync: false
