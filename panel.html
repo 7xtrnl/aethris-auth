@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aethris — Auth Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:      #080810;
+  --s0:      #0c0c18;
+  --s1:      #11111f;
+  --s2:      #181828;
+  --s3:      #20203a;
+  --border:  rgba(120,100,255,.12);
+  --border2: rgba(120,100,255,.22);
+  --acc:     #7b5ea7;
+  --acc2:    #a67fd6;
+  --acc3:    #c9a0ff;
+  --glow:    rgba(123,94,167,.35);
+  --green:   #3ecf8e;
+  --red:     #f25f5c;
+  --yellow:  #f7c948;
+  --text:    #e8e4f4;
+  --muted:   #6a6485;
+  --r:       12px;
+  --r2:      18px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;animation:drift 14s ease-in-out infinite}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(123,94,167,.15) 0%,transparent 70%);top:-150px;left:-150px}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(62,207,142,.07) 0%,transparent 70%);bottom:-100px;right:-100px;animation-delay:-7s}
+.orb3{width:350px;height:350px;background:radial-gradient(circle,rgba(166,127,214,.1) 0%,transparent 70%);top:40%;left:45%;animation-delay:-3.5s}
+@keyframes drift{0%,100%{transform:translate(0,0)}33%{transform:translate(25px,-18px)}66%{transform:translate(-18px,25px)}}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:1}
+.login-wrap{width:380px;animation:slideUp .6s cubic-bezier(.16,1,.3,1) both}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{text-align:center;margin-bottom:36px}
+.login-logo .sym{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:20px;background:linear-gradient(135deg,var(--acc),var(--acc2));font-size:32px;margin-bottom:18px;box-shadow:0 0 50px var(--glow);animation:gpulse 3s ease-in-out infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 0 40px var(--glow)}50%{box-shadow:0 0 70px rgba(123,94,167,.55)}}
+.login-logo h1{font-size:28px;font-weight:800;letter-spacing:-.6px}
+.login-logo h1 span{color:var(--acc3)}
+.login-logo p{color:var(--muted);font-size:13px;margin-top:5px}
+.login-card{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r2);padding:32px;box-shadow:0 0 0 1px rgba(255,255,255,.03),0 40px 80px rgba(0,0,0,.45);backdrop-filter:blur(20px)}
+.input-group{margin-bottom:16px}
+.input-group label{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.inp{width:100%;padding:13px 16px;background:var(--s0);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:14px;transition:border-color .2s,box-shadow .2s;outline:none}
+.inp:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(123,94,167,.14)}
+.inp::placeholder{color:var(--muted)}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;border-radius:var(--r);color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:opacity .2s,box-shadow .2s,transform .1s;box-shadow:0 4px 24px var(--glow);position:relative;overflow:hidden}
+.btn-login::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,.08));opacity:0;transition:opacity .2s}
+.btn-login:hover{opacity:.9;box-shadow:0 6px 35px var(--glow)}
+.btn-login:hover::after{opacity:1}
+.btn-login:active{transform:scale(.98)}
+.login-err{margin-top:12px;padding:10px 14px;background:rgba(242,95,92,.1);border:1px solid rgba(242,95,92,.25);border-radius:var(--r);color:var(--red);font-size:13px;display:none;text-align:center;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* SIDEBAR */
+#app{display:none;min-height:100vh;position:relative;z-index:1}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:224px;background:var(--s0);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10;padding:24px 14px;animation:sideIn .5s cubic-bezier(.16,1,.3,1) both}
+@keyframes sideIn{from{transform:translateX(-28px);opacity:0}to{transform:translateX(0);opacity:1}}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:30px}
+.sidebar-logo .icon{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 22px var(--glow);flex-shrink:0}
+.sidebar-logo .name{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.sidebar-logo .name span{color:var(--acc3)}
+.nav-section-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 10px;margin:16px 0 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .18s;margin-bottom:2px;border:1px solid transparent;position:relative}
+.nav-item:hover{color:var(--text);background:var(--s2)}
+.nav-item.active{color:var(--acc3);background:rgba(123,94,167,.11);border-color:rgba(123,94,167,.18)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:22%;bottom:22%;width:2px;border-radius:2px;background:linear-gradient(180deg,var(--acc),var(--acc3))}
+.nav-icon{font-size:15px;flex-shrink:0;width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border)}
+.live-dot{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);padding:0 10px;margin-bottom:10px}
+.live-dot span{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green);animation:blink 2s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.logout-btn{width:100%;padding:10px 10px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:8px}
+.logout-btn:hover{border-color:var(--red);color:var(--red);background:rgba(242,95,92,.05)}
+
+/* MAIN */
+.main{margin-left:224px;padding:32px;min-height:100vh}
+.page-header{margin-bottom:26px;animation:fadeUp .4s ease both}
+.page-header h2{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.page-header p{color:var(--muted);font-size:13px;margin-top:4px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.section{display:none;animation:fadeUp .3s ease both}
+.section.active{display:block}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:13px;margin-bottom:26px}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;animation:fadeUp .4s ease both}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--acc2),transparent);opacity:.35}
+.stat-card .val{font-size:30px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--text),var(--acc3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-card .lbl{font-size:11px;font-weight:600;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.06em}
+.stat-card .ico{position:absolute;right:16px;top:16px;font-size:20px;opacity:.15}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:24px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--acc),transparent);opacity:.25}
+.card h3{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--acc3);margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+
+/* FIELDS */
+.field{margin-bottom:11px}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field .inp,.field select{width:100%;padding:11px 13px;background:var(--s0);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field select{font-family:'Syne',sans-serif}
+.field .inp:focus,.field select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(123,94,167,.11)}
+.field select option{background:var(--s2)}
+
+/* BUTTONS */
+.btn{padding:10px 17px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer;letter-spacing:.02em;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 16px var(--glow)}
+.btn-primary:hover{box-shadow:0 6px 26px var(--glow);opacity:.9}
+.btn-green{background:rgba(62,207,142,.13);color:var(--green);border:1px solid rgba(62,207,142,.22)}
+.btn-green:hover{background:rgba(62,207,142,.23)}
+.btn-red{background:rgba(242,95,92,.11);color:var(--red);border:1px solid rgba(242,95,92,.2)}
+.btn-red:hover{background:rgba(242,95,92,.21)}
+.btn-yellow{background:rgba(247,201,72,.11);color:var(--yellow);border:1px solid rgba(247,201,72,.2)}
+.btn-yellow:hover{background:rgba(247,201,72,.21)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* RESULT */
+.result{font-size:12px;margin-top:10px;padding:9px 13px;border-radius:var(--r);display:none;font-family:'DM Mono',monospace;animation:fadeUp .2s ease}
+.result.ok{background:rgba(62,207,142,.09);border:1px solid rgba(62,207,142,.18);color:var(--green)}
+.result.err{background:rgba(242,95,92,.09);border:1px solid rgba(242,95,92,.18);color:var(--red)}
+
+/* TABLE */
+.table-bar{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.search-inp{flex:1;padding:10px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s}
+.search-inp:focus{border-color:var(--acc)}
+.search-inp::placeholder{color:var(--muted)}
+.count-badge{padding:6px 12px;background:var(--s2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap}
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--s2)}
+th{text-align:left;padding:12px 15px;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+td{padding:11px 15px;border-top:1px solid var(--border);vertical-align:middle;font-family:'DM Mono',monospace;font-size:12px}
+tr:hover td{background:rgba(123,94,167,.04)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:.03em}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;display:inline-block;flex-shrink:0}
+.badge-green{background:rgba(62,207,142,.11);color:var(--green);border:1px solid rgba(62,207,142,.2)}
+.badge-green::before{background:var(--green);box-shadow:0 0 5px var(--green)}
+.badge-red{background:rgba(242,95,92,.11);color:var(--red);border:1px solid rgba(242,95,92,.2)}
+.badge-red::before{background:var(--red)}
+.badge-purple{background:rgba(166,127,214,.11);color:var(--acc3);border:1px solid rgba(166,127,214,.2)}
+.badge-purple::before{background:var(--acc3)}
+.badge-gray{background:var(--s3);color:var(--muted);border:1px solid var(--border)}
+.badge-gray::before{background:var(--muted)}
+
+/* KEY LIST */
+.key-list{display:flex;flex-direction:column;gap:6px;margin-top:14px;max-height:280px;overflow-y:auto}
+.key-item{display:flex;align-items:center;justify-content:space-between;background:var(--s0);border:1px solid var(--border);border-radius:var(--r);padding:10px 13px;animation:fadeUp .25s ease both;transition:border-color .2s}
+.key-item:hover{border-color:var(--border2)}
+.key-item code{font-family:'DM Mono',monospace;font-size:12px;color:var(--acc3);letter-spacing:.04em}
+.copy-btn{background:rgba(123,94,167,.13);border:1px solid rgba(123,94,167,.2);color:var(--acc3);font-size:11px;font-weight:700;font-family:'Syne',sans-serif;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .18s;flex-shrink:0}
+.copy-btn:hover{background:rgba(123,94,167,.28)}
+.copy-btn.copied{background:rgba(62,207,142,.13);border-color:rgba(62,207,142,.2);color:var(--green)}
+
+/* QS */
+.qs-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.qs-item:last-child{border-bottom:none}
+.qs-label{font-size:13px;color:var(--muted)}
+.qs-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--text)}
+
+/* TOAST */
+.toast{position:fixed;bottom:26px;right:26px;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);padding:12px 20px;font-size:13px;font-weight:600;box-shadow:0 10px 40px rgba(0,0,0,.45);transform:translateY(18px);opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.16,1,.3,1);z-index:99;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--acc)}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="sym">⬡</div>
+      <h1>Aethris<span>.</span></h1>
+      <p>Authentication Management System</p>
+    </div>
+    <div class="login-card">
+      <div class="input-group">
+        <label>Admin Secret</label>
+        <input class="inp" type="password" id="secret-input" placeholder="Enter your secret key…" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn-login" onclick="doLogin()">Access Panel →</button>
+      <div class="login-err" id="login-err">⚠ Invalid secret — access denied.</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="icon">⬡</div>
+      <div class="name">Aethris<span>.</span></div>
+    </div>
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="setTab('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+    <div class="nav-section-label">Manage</div>
+    <div class="nav-item" onclick="setTab('keys')"><span class="nav-icon">⌗</span>Keys</div>
+    <div class="nav-item" onclick="setTab('users')"><span class="nav-icon">◎</span>Users</div>
+    <div class="nav-item" onclick="setTab('actions')"><span class="nav-icon">⚡</span>Actions</div>
+    <div class="nav-section-label">Integrations</div>
+    <div class="nav-item" onclick="setTab('bot')"><span class="nav-icon">◉</span>Bot Bridge</div>
+    <div class="sidebar-footer">
+      <div class="live-dot"><span></span>Live · auto-refresh 30s</div>
+      <button class="logout-btn" onclick="logout()">⎋ &nbsp;Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="section active" id="tab-dashboard">
+      <div class="page-header"><h2>Dashboard</h2><p>System overview and key generation</p></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>⌗ Generate Keys</h3>
+          <div class="field"><label>Count</label><input class="inp" type="number" id="gen-count" value="1" min="1" max="100"/></div>
+          <div class="field"><label>Expiry (days)</label><input class="inp" type="number" id="gen-days" value="30" min="1"/></div>
+          <div class="field"><label>Type</label>
+            <select id="gen-lifetime"><option value="false">Timed</option><option value="true">♾ Lifetime</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="generateKeys()">Generate →</button>
+          <div class="key-list" id="generated-keys"></div>
+        </div>
+        <div class="card">
+          <h3>◈ System Health</h3>
+          <div id="quick-stats"><div style="color:var(--muted);font-size:13px">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KEYS -->
+    <div class="section" id="tab-keys">
+      <div class="page-header"><h2>License Keys</h2><p>All generated keys and redemption status</p></div>
+      <div class="table-bar">
+        <input class="search-inp" placeholder="Search keys, usernames…" oninput="filterTable('keys-table',this.value,'keys-count','keys')"/>
+        <span class="count-badge" id="keys-count">—</span>
+      </div>
+      <div class="table-wrap">
+        <table id="keys-table">
+          <thead><tr><th>Key</th><th>Status</th><th>Type</th><th>Days</th><th>User</th><th>Discord</th><th>Redeemed</th></tr></thead>
+          <tbody id="keys-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="section" id="tab-users">
+      <div class="page-header"><h2>Users</h2><p>All registered accounts</p></div>
+      <div class="table-bar">
+        <input class="search-inp" placeholder="Search username, discord, IP…" oninput="filterTable('users-table',this.value,'users-count','users')"/>
+        <span class="count-badge" id="users-count">—</span>
+      </div>
+      <div class="table-wrap">
+        <table id="users-table">
+          <thead><tr><th>Username</th><th>Discord</th><th>Status</th><th>Expiry</th><th>HWID</th><th>Last Login</th><th>IP</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="section" id="tab-actions">
+      <div class="page-header"><h2>Actions</h2><p>User management operations</p></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>⚡ Ban / Unban</h3>
+          <div class="field"><label>Target</label><input class="inp" type="text" id="ban-target" placeholder="username / discord_id / hwid"/></div>
+          <div class="field"><label>Target Type</label>
+            <select id="ban-type"><option value="username">Username</option><option value="discord_id">Discord ID</option><option value="hwid">HWID</option></select>
+          </div>
+          <div class="field"><label>Reason</label><input class="inp" type="text" id="ban-reason" placeholder="Optional…"/></div>
+          <div class="btn-row">
+            <button class="btn btn-red" onclick="banUser()">Ban</button>
+            <button class="btn btn-green" onclick="unbanUser()">Unban</button>
+          </div>
+          <div class="result" id="ban-result"></div>
+        </div>
+        <div class="card">
+          <h3>⬡ HWID Reset</h3>
+          <div class="field"><label>Username</label><input class="inp" type="text" id="hwid-user" placeholder="username"/></div>
+          <button class="btn btn-yellow" onclick="resetHWID()">Reset HWID</button>
+          <div class="result" id="hwid-result"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>◎ Reset Password</h3>
+          <div class="field"><label>Username</label><input class="inp" type="text" id="pw-user" placeholder="username"/></div>
+          <div class="field"><label>New Password</label><input class="inp" type="text" id="pw-new" placeholder="new password"/></div>
+          <button class="btn btn-primary" onclick="resetPassword()">Reset →</button>
+          <div class="result" id="pw-result"></div>
+        </div>
+        <div class="card">
+          <h3>✕ Delete User</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Permanently deletes the account and frees their license key.</p>
+          <div class="field"><label>Username</label><input class="inp" type="text" id="del-user" placeholder="username"/></div>
+          <button class="btn btn-red" onclick="deleteUser()">Delete User</button>
+          <div class="result" id="del-result"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>+ Extend Subscription</h3>
+          <div class="field"><label>Username</label><input class="inp" type="text" id="ext-user" placeholder="username"/></div>
+          <div class="field"><label>Days to Add</label><input class="inp" type="number" id="ext-days" value="30" min="1"/></div>
+          <button class="btn btn-green" onclick="extendKey()">Extend →</button>
+          <div class="result" id="ext-result"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOT -->
+    <div class="section" id="tab-bot">
+      <div class="page-header"><h2>Bot Bridge</h2><p>Queue actions for the Discord bot</p></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>◉ Send Message</h3>
+          <div class="field"><label>Channel ID</label><input class="inp" type="text" id="msg-channel" placeholder="123456789012345678"/></div>
+          <div class="field"><label>Message</label><input class="inp" type="text" id="msg-text" placeholder="Message content…"/></div>
+          <button class="btn btn-primary" onclick="botSendMsg()">Queue →</button>
+          <div class="result" id="msg-result"></div>
+        </div>
+        <div class="card">
+          <h3>◎ Manage Role</h3>
+          <div class="field"><label>Discord ID</label><input class="inp" type="text" id="role-discord" placeholder="user discord id"/></div>
+          <div class="field"><label>Role ID</label><input class="inp" type="text" id="role-id" placeholder="role id"/></div>
+          <div class="field"><label>Action</label>
+            <select id="role-action"><option value="add">Add Role</option><option value="remove">Remove Role</option></select>
+          </div>
+          <button class="btn btn-primary" onclick="botManageRole()">Execute →</button>
+          <div class="result" id="role-result"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let SECRET='';
+const API='';
+async function req(m,p,b){const s=p.includes('?')?'&':'?';const u=`${API}${p}${s}admin_secret=${SECRET}`;const o={method:m,headers:{'Content-Type':'application/json'}};if(b)o.body=JSON.stringify(b);const r=await fetch(u,o);const d=await r.json();if(!r.ok)throw new Error(d.detail||'Error');return d}
+function toast(msg,ok=true){const t=document.getElementById('toast');t.innerHTML=`<span style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✓':'✕'}</span> ${msg}`;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800)}
+function showResult(id,msg,ok){const el=document.getElementById(id);el.textContent=(ok?'✓ ':'✕ ')+msg;el.className='result '+(ok?'ok':'err');el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',4500)}
+async function doLogin(){const s=document.getElementById('secret-input').value.trim();if(!s)return;SECRET=s;try{await req('GET','/admin/stats');document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';loadAll()}catch{SECRET='';const e=document.getElementById('login-err');e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',3000)}}
+function logout(){SECRET='';document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';document.getElementById('secret-input').value=''}
+const TABS=['dashboard','keys','users','actions','bot'];
+function setTab(n){document.querySelectorAll('.nav-item').forEach((el,i)=>el.classList.toggle('active',TABS[i]===n));document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById('tab-'+n).classList.add('active')}
+function loadAll(){loadDashboard();loadKeys();loadUsers()}
+async function loadDashboard(){try{const d=await req('GET','/admin/stats');const defs=[['Total Keys',d.total_keys,'⌗'],['Used',d.used_keys,'◈'],['Available',d.unused_keys,'◎'],['Total Users',d.total_users,'◉'],['Active',d.active_users,'✓'],['Banned',d.banned_users,'✕']];document.getElementById('stats-grid').innerHTML=defs.map(([l,v,ic],i)=>`<div class="stat-card" style="animation-delay:${i*.07}s"><span class="ico">${ic}</span><div class="val">${v}</div><div class="lbl">${l}</div></div>`).join('');const p=d.total_keys?Math.round(d.used_keys/d.total_keys*100):0;document.getElementById('quick-stats').innerHTML=[['Key Usage',`${d.used_keys} / ${d.total_keys} (${p}%)`],['Active Users',d.active_users],['Banned Users',d.banned_users],['Free Keys',d.unused_keys]].map(([l,v])=>`<div class="qs-item"><span class="qs-label">${l}</span><span class="qs-val">${v}</span></div>`).join('')}catch(e){console.error(e)}}
+async function generateKeys(){const c=document.getElementById('gen-count').value,dy=document.getElementById('gen-days').value,lt=document.getElementById('gen-lifetime').value==='true';try{const d=await req('GET',`/admin/generate?count=${c}&expiry_days=${dy}&lifetime=${lt}`);document.getElementById('generated-keys').innerHTML=d.keys.map(k=>`<div class="key-item"><code>${k}</code><button class="copy-btn" id="cb-${k.replace(/-/g,'')}" onclick="copyKey('${k}')">copy</button></div>`).join('');toast(`Generated ${d.keys.length} key${d.keys.length>1?'s':''}`);loadDashboard()}catch(e){toast(e.message,false)}}
+function copyKey(k){navigator.clipboard.writeText(k);const id='cb-'+k.replace(/-/g,'');const b=document.getElementById(id);b.textContent='copied!';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)}
+async function loadKeys(){try{const rows=await req('GET','/admin/keys');document.getElementById('keys-count').textContent=rows.length+' keys';document.getElementById('keys-body').innerHTML=rows.map(r=>`<tr><td><code style="color:var(--acc3);font-size:11px">${r.key}</code></td><td>${r.is_used?'<span class="badge badge-gray">Used</span>':'<span class="badge badge-green">Available</span>'}</td><td>${r.is_lifetime?'<span class="badge badge-purple">Lifetime</span>':'<span class="badge badge-gray">Timed</span>'}</td><td>${r.is_lifetime?'—':r.expiry_days+'d'}</td><td>${r.username||'<span style="color:var(--muted)">—</span>'}</td><td style="color:var(--muted)">${r.discord_name||'—'}</td><td style="color:var(--muted)">${r.redeemed_at?r.redeemed_at.slice(0,10):'—'}</td></tr>`).join('')}catch(e){console.error(e)}}
+async function loadUsers(){try{const rows=await req('GET','/admin/users');document.getElementById('users-count').textContent=rows.length+' users';document.getElementById('users-body').innerHTML=rows.map(r=>{const exp=r.is_lifetime?'♾ Lifetime':(r.expiry_date?r.expiry_date.slice(0,10):'—');return`<tr><td><strong>${r.username}</strong></td><td style="color:var(--muted)">${r.discord_name||r.discord_id||'—'}</td><td>${r.is_banned?'<span class="badge badge-red">Banned</span>':'<span class="badge badge-green">Active</span>'}</td><td>${r.is_lifetime?`<span class="badge badge-purple">${exp}</span>`:`<span class="badge badge-gray">${exp}</span>`}</td><td>${r.hwid?'<span class="badge badge-gray">Locked</span>':'<span class="badge badge-green">Free</span>'}</td><td style="color:var(--muted)">${r.last_login?r.last_login.slice(0,10):'Never'}</td><td style="color:var(--muted);font-size:11px">${r.last_ip||'—'}</td></tr>`}).join('')}catch(e){console.error(e)}}
+function filterTable(tid,q,cid,label){const ql=q.toLowerCase();let v=0;document.querySelectorAll(`#${tid} tbody tr`).forEach(tr=>{const s=tr.textContent.toLowerCase().includes(ql);tr.style.display=s?'':'none';if(s)v++});document.getElementById(cid).textContent=q?v+' match':v+' '+label}
+async function banUser(){try{await req('POST','/admin/ban',{target:document.getElementById('ban-target').value,target_type:document.getElementById('ban-type').value,reason:document.getElementById('ban-reason').value||'No reason given'});showResult('ban-result','User banned',true);loadUsers()}catch(e){showResult('ban-result',e.message,false)}}
+async function unbanUser(){try{await req('POST','/admin/unban',{target:document.getElementById('ban-target').value,target_type:document.getElementById('ban-type').value});showResult('ban-result','User unbanned',true);loadUsers()}catch(e){showResult('ban-result',e.message,false)}}
+async function resetHWID(){try{await req('POST','/admin/reset_hwid',{username:document.getElementById('hwid-user').value});showResult('hwid-result','HWID reset',true)}catch(e){showResult('hwid-result',e.message,false)}}
+async function resetPassword(){try{await req('POST','/admin/reset_password',{username:document.getElementById('pw-user').value,new_password:document.getElementById('pw-new').value});showResult('pw-result','Password reset',true)}catch(e){showResult('pw-result',e.message,false)}}
+async function deleteUser(){if(!confirm('Permanently delete this user?'))return;try{await req('POST','/admin/delete_user',{username:document.getElementById('del-user').value});showResult('del-result','User deleted',true);loadUsers();loadKeys()}catch(e){showResult('del-result',e.message,false)}}
+async function extendKey(){try{const d=await req('POST','/admin/extend_key',{username:document.getElementById('ext-user').value,days:parseInt(document.getElementById('ext-days').value)});showResult('ext-result','New expiry: '+d.new_expiry.slice(0,10),true);loadUsers()}catch(e){showResult('ext-result',e.message,false)}}
+async function botSendMsg(){try{await req('POST','/admin/bot/send_message',{channel_id:document.getElementById('msg-channel').value,message:document.getElementById('msg-text').value});showResult('msg-result','Message queued',true)}catch(e){showResult('msg-result',e.message,false)}}
+async function botManageRole(){try{await req('POST','/admin/bot/manage_role',{discord_id:document.getElementById('role-discord').value,role_id:document.getElementById('role-id').value,action:document.getElementById('role-action').value});showResult('role-result','Role action queued',true)}catch(e){showResult('role-result',e.message,false)}}
+setInterval(()=>{if(SECRET)loadAll()},30000);
+</script>
+</body>
+</html>
